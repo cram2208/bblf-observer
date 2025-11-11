@@ -64,7 +64,7 @@
   const mo = new MutationObserver(videoObserver);
   mo.observe(document.body, {childList: true, subtree: true});
 
-  async function logToServer(msg, level) {
+  async function logToServer(level, ...msg) {
     console.log("TNT: [" + level + "]", msg);
 
     try {
@@ -84,10 +84,10 @@
     }
   }
 
-  async function log(msg) { await logToServer("BBLF Observer: " + msg, "LOG"); }
-  async function warn(msg) { await logToServer("BBLF Observer: " + msg, "WARN"); }
-  async function error(msg) { await logToServer("BBLF Observer: " + msg, "ERROR"); }
-  async function info(msg) { await logToServer("BBLF Observer: " + msg, "INFO"); }
+  async function log(...msg) { await logToServer("LOG", "BBLF Observer:", ...msg); }
+  async function warn(...msg) { await logToServer("WARN", "BBLF Observer:", ...msg); }
+  async function error(...msg) { await logToServer("ERROR", "BBLF Observer:", ...msg); }
+  async function info(...msg) { await logToServer("INFO", "BBLF Observer:", ...msg); }
 
   window.bblf = { logToServer };
 })();
