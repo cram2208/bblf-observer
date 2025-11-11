@@ -22,9 +22,10 @@
 
   function replaceBodyWithVideo() {
     document.body.replaceChildren(videoElement);
-    videoElement.addEventListener("waiting", (event) => {
+    videoElement.addEventListener("waiting", (e) => {
       log("WAITING DETECTED");
-      log("WAITING EVENT", event);
+      log("WAITING EVENT", e);
+
       clearTimeout(reloadTimeout);
       reloadTimeout = setTimeout(() => window.location.reload(), reloadDelay);
       lastVideoTime = videoElement.currentTime;
