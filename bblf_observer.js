@@ -18,7 +18,6 @@
   let reloadDelay = 30 * 1000;
   let playbackCheckTimeout;
   let playbackCheckInterval = 0.1 * 1000;
-  let lastVideoTime;
 
   function replaceBodyWithVideo() {
     document.body.replaceChildren(videoElement);
@@ -26,20 +25,26 @@
       log("WAITING DETECTED");
       log("WAITING EVENT", e);
 
-      clearTimeout(reloadTimeout);
-      reloadTimeout = setTimeout(() => window.location.reload(), reloadDelay);
-      lastVideoTime = videoElement.currentTime;
-      let stopFlag = false;
-      playbackCheckTimeout = setInterval(() => {
-        const currentTime = videoElement.currentTime;
-        if (lastVideoTime != currentTime) {
-          log("PLAYBACK RESUMED");
-          clearInterval(playbackCheckTimeout);
-          clearTimeout(reloadTimeout);
-        } else {
-          log("PLAYBACK STILL WAITING");
-        }
-      }, playbackCheckInterval);
+      if (!reloadTimeout) {
+        reloadTimeout = setTimeout(() => { window.location.href = "https://10.com.au/big-brother"; }, reloadDelay);
+        info("reloadTimeout HAS STARTED!", reloadTimeout);
+      }
+
+      if (!playbackCheckTimeout) {
+        let lastVideoTime = videoElement.currentTime;
+        playbackCheckTimeout = setInterval(() => {
+          const currentTime = videoElement.currentTime;
+          if (lastVideoTime != currentTime) {
+            log("PLAYBACK RESUMED");
+            clearTimeout(reloadTimeout);
+            reloadTimeout = null;
+            clearInterval(playbackCheckTimeout);
+            playbackCheckTimeout = null;
+          } else {
+            log("PLAYBACK STILL WAITING");
+          }
+        }, playbackCheckInterval);
+      }
     });
   }
 
