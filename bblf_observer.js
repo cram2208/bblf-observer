@@ -26,7 +26,10 @@
       log("WAITING EVENT", e);
 
       if (!reloadTimeout) {
-        reloadTimeout = setTimeout(() => { window.location.href = "https://10.com.au/big-brother"; }, reloadDelay);
+        reloadTimeout = setTimeout(() => {
+          info("RELOADING LIVE FEEDS...");
+          window.location.href = "https://10.com.au/big-brother";
+        }, reloadDelay);
         info("reloadTimeout HAS STARTED!", reloadTimeout);
       }
 
