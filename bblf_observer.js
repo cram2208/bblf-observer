@@ -19,51 +19,77 @@
   let videoElement;
   let reloadTimeout;
   let playbackCheckTimeout;
+  let eventLoopActive = false;
+  let eventLoopStopFlag = false;
 
-  function replaceBodyWithVideo() {
+  function eventLoop() {
+    if (eventLoopActive) {
+      warn("eventLoop: Event loop is already active.");
+      return;
+    }
+
+    const eventLoopPollDelay = 0.1 * 1000;
+    const reloadPageDelay = 30 * 1000;
+
+    let lastVideoTime = null;
+    let reloadPageTimeout;
+
+    info("eventLoop: Replacing body with video...");
     document.body.replaceChildren(videoElement);
-    videoElement.addEventListener("waiting", (e) => {
-      log("WAITING DETECTED");
-      log("WAITING EVENT", e);
 
-      if (!reloadTimeout) {
-        reloadTimeout = setTimeout(() => {
-          info("RELOADING LIVE FEEDS...");
-          window.location.href = "https://10.com.au/big-brother";
-        }, reloadDelay);
-        info("reloadTimeout HAS STARTED!", reloadTimeout);
+    (function _() {
+      if (eventLoopStopFlag) {
+        info("eventLoop._: Event loop has been stopped.");
+        eventLoopActive = false;
+        eventLoopStopFlag = false;
+        return;
       }
 
-      if (!playbackCheckTimeout) {
-        let lastVideoTime = videoElement.currentTime;
-        playbackCheckTimeout = setInterval(() => {
-          const currentTime = videoElement.currentTime;
-          if (lastVideoTime != currentTime) {
-            log("PLAYBACK RESUMED");
-            clearTimeout(reloadTimeout);
-            reloadTimeout = null;
-            clearInterval(playbackCheckTimeout);
-            playbackCheckTimeout = null;
-          } else {
-            log("PLAYBACK STILL WAITING");
+      try {
+        if (!videoElement) {
+          info("eventLoop._: Waiting for video element...");
+          return;
+        }
+
+        const currentVideoTime = videoElement.currentTime;
+
+        if (lastVideoTime >= currentVideoTime) {
+          if (!reloadPageTimeout) {
+            info("eventLoop._: Video playback has stalled. Page will reload in " + reloadPageDelay + "ms...");
+            reloadPageTimeout = setTimeout(() => {
+              info("eventLoop._: Reload page timeout reached.");
+              window.location.href = "https://10.com.au/big-brother"
+              eventLoopStopFlag = true;
+            }, reloadPageDelay);
           }
-        }, playbackCheckInterval);
+        } else if (reloadPageTimeout) {
+          info("eventLoop._: Video playback has resumed. Page reload timeout has been cancelled.");
+          clearTimeout(reloadPageTimeout);
+          reloadPageTimeout = null;
+        }
+
+        lastVideoTime = currentVideoTime;
+      } finally {
+        setTimeout(_, eventLoopPollDelay);
       }
-    });
+    })();
+
+    info("eventLoop: Event loop is now active.");
+    eventLoopActive = true;
   }
 
   function videoObserver(_, obs) {
     videoElement = document.querySelector("video");
 
     if (videoElement) {
-      const timeout = setInterval(() => {
+      const interval = setInterval(() => {
         videoElement = document.querySelector("video");
         if (videoElement.paused) {
-          log("STILL PAUSED");
+          info("videoObserver: Waiting for video to play...");
         } else {
-          clearInterval(timeout);
-          replaceBodyWithVideo();
-          log("replaceBodyWithVideo WAS CALLED!");
+          info("videoObserver: Calling Event Loop...");
+          eventLoop();
+          clearInterval(interval);
         }
       }, 500);
 
