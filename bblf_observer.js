@@ -12,12 +12,13 @@
 (function() {
   "use strict";
 
-  let logPort = 5005;
+  const logPort = 5005;
+  const reloadDelay = 30 * 1000;
+  const playbackCheckInterval = 0.1 * 1000;
+
   let videoElement;
   let reloadTimeout;
-  let reloadDelay = 30 * 1000;
   let playbackCheckTimeout;
-  let playbackCheckInterval = 0.1 * 1000;
 
   function replaceBodyWithVideo() {
     document.body.replaceChildren(videoElement);
